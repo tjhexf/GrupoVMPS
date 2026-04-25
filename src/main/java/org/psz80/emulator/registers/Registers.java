@@ -1,12 +1,87 @@
 public class Register{
     private int B,C,D,E,H,L; // REGISTRADORES 8 BITS
     private int A; // ACUMULADOR
-    private int F; // FLAG, Ulisses: Ainda não entendi esse
+    private int F; // FLAG, Ulisses: Explicação abaixo
+    //FLAGS
+    //BIT 7 S Sign Indica resultado negativo
+    //BIT 6 Z Zero Resultado igual a zero
+    //BIT 4 H Half Carry Carry entre nibbles
+    //BIT 2 P/V Parity/Overflow Paridade ou overflow
+    //BIT 1 N Add/Subtract Última operação foi subtração
+    //BIT 0 C Carry Vai-um ou borrow
+    //BIT 3 E 5 NÃO SAO USADOS
 
     //Ulisses: Aqui os de 16 Bits (Especiais)
     private int PC; // progam counter
     private int SP; // stack pointer
     private int IX,IY; // reg de indice
+}
+
+
+//Flags:
+
+public void setSFlag(){
+    this.F = this.F | 0b10000000
+}
+public void clearSFlag(){
+    this.F = this.F & 0b01111111
+}
+public boolean getSFlag(){
+    return (this.F & 0b10000000) != 0
+}
+
+public void setZFlag(){
+    this.F = this.F | 0b01000000
+}
+
+public void clearZFlag(){
+    this.F = this.F & 0b10111111
+}
+public boolean getZFlag(){
+    return (this.F & 0b01000000) != 0
+}
+
+public void setHFlag(){
+    this.F = this.F | 0b00010000
+}
+
+public void clearHFlag(){
+    this.F = this.F & 0b11101111
+}
+public boolean getHFlag(){
+    return (this.F & 0b00010000) != 0
+}
+
+public void setPVFlag(){
+    this.F = this.F | 0b00000100
+}
+
+public void clearPVFlag(){
+    this.F = this.F & 0b11111011
+}
+
+public boolean getPVFlag(){
+    return (this.F & 0b00000100) != 0
+}
+
+public void setNFlag(){
+    this.F = this.F | 0b00000010
+}
+public void clearNFlag(){
+    this.F = this.F & 0b11111101
+}
+public boolean getNFlag(){
+    return (this.F & 0b00000010) != 0
+}
+
+public void setCFlag(){
+    this.F = this.F | 0b00000001
+}
+public void clearCFlag(){
+    this.F = this.F & 0b11111110
+}
+public boolean getCFlag(){
+    return (this.F & 0b00000001) != 0
 }
 
 
