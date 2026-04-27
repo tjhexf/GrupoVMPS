@@ -1,8 +1,8 @@
-package org.psz80.assembler.ast;
+package org.psz80.assembler.model;
 
 import java.util.List;
 
-public class Instruction {
+public class Instruction implements Node {
     public String mnemonic;
     public List<Operand> operands;
 

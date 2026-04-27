@@ -1,4 +1,4 @@
-package org.psz80.assembler.ast;
+package org.psz80.assembler.model;
 
 public class ImmediateOperand extends Operand {
     public int value;
