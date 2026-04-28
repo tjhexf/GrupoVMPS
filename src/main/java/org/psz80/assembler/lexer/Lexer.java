@@ -15,10 +15,37 @@ public class Lexer {
         return pos >= input.length();
     }
 
+    private boolean isHexDigit(char c) {
+        return Character.isDigit(c) ||
+                (c >= 'a' && c <= 'f') ||
+                (c >= 'A' && c <= 'F');
+    }
+
     private Token readNumber() {
         int start = pos;
 
-        while (!isAtEnd() && Character.isDigit(peek())) {
+
+        // achar o hex: prefixo 0x
+        if (peek() == '0' && pos + 1 < input.length() &&
+                (input.charAt(pos + 1) == 'x' || input.charAt(pos + 1) == 'X')) {
+
+            advance(); // 0
+            advance(); // x
+
+            while (!isAtEnd() && isHexDigit(peek())) {
+                advance();
+            }
+
+            String text = input.substring(start, pos);
+            return new Token(TokenType.NUMBER, text);
+        }
+
+        // sufixo h (1234h)
+        while (!isAtEnd() && isHexDigit(peek())) {
+            advance();
+        }
+
+        if (!isAtEnd() && (peek() == 'h' || peek() == 'H')) {
             advance();
         }
 
@@ -88,6 +115,19 @@ public class Lexer {
 
             if (c == ')') {
                 tokens.add(new Token(TokenType.RPAREN, ")"));
+                advance();
+                continue;
+            }
+
+            // jolene: indexados
+            if (c == '+') {
+                tokens.add(new Token(TokenType.PLUS, "+"));
+                advance();
+                continue;
+            }
+            // indexados aaaa
+            if (c == '-') {
+                tokens.add(new Token(TokenType.MINUS, "-"));
                 advance();
                 continue;
             }

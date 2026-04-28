@@ -1,10 +1,11 @@
 package org.psz80.assembler.model;
 
-public class RegisterOperand extends Operand {
+// jolene: label que é um operando (pra jump)
+public class IdentifierOperand extends Operand {
 
     private final String name;
 
-    public RegisterOperand(String name) {
+    public IdentifierOperand(String name) {
         this.name = name;
     }
 

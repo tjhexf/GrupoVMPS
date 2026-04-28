@@ -12,6 +12,13 @@ public class Parser {
     private final List<Token> tokens;
     private int pos = 0;
 
+    private void expect(TokenType type) {
+        if (!check(type)) {
+            throw new RuntimeException("Esperado: " + type + " mas encontrou: " + peek());
+        }
+        advance();
+    }
+
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
     }
@@ -60,22 +67,134 @@ public class Parser {
     }
 
     private Instruction parseInstruction() {
-        String mnemonic = advance().text; // IDENT
+        String mnemonic = advance().text;
 
-        // skip rest of line for now
-        while (!check(TokenType.NEWLINE) && !isAtEnd()) {
+        List<Operand> operands = new ArrayList<>();
+
+        if (!check(TokenType.NEWLINE) && !isAtEnd()) {
+            operands.add(parseOperand());
+
+            while (check(TokenType.COMMA)) {
+                advance();
+                operands.add(parseOperand());
+            }
+        }
+
+        return new Instruction(mnemonic, operands);
+    }
+
+    private boolean isRegister(String name) {
+        return switch (name.toUpperCase()) {
+            case "A", "B", "C", "D", "E", "H", "L" -> true;
+            case "HL", "BC", "DE" -> true;
+            default -> false;
+        };
+    }
+
+    private Operand parseOperand() {
+
+        // ( ... )
+        if (check(TokenType.LPAREN)) {
+            advance(); // (
+
+            // jolene: a busca do indexado
+            if (check(TokenType.IDENT)) {
+                String name = peek().text.toUpperCase();
+
+                if (name.equals("IX") || name.equals("IY")) {
+                    advance();
+
+                    int offset = 0;
+
+                    if (check(TokenType.PLUS) || check(TokenType.MINUS)) {
+                        boolean negative = check(TokenType.MINUS);
+                        advance();
+
+                        if (!check(TokenType.NUMBER)) {
+                            throw new RuntimeException("número esperado após + ou -");
+                        }
+
+                        offset = Integer.parseInt(advance().text);
+                        if (negative) offset = -offset;
+                    }
+
+                    expect(TokenType.RPAREN);
+
+                    return new MemoryOperand(new IndexedOperand(name, offset));
+                }
+            }
+
+            Operand inner = parseOperand();
+
+            expect(TokenType.RPAREN);
+
+            return new MemoryOperand(inner);
+        }
+
+        if (check(TokenType.NUMBER)) {
+            int value = parseNumber(advance().text);
+            return new ImmediateOperand(value);
+        }
+
+        if (check(TokenType.MINUS)) {
+            advance(); // -
+
+            if (!check(TokenType.NUMBER)) {
+                throw new RuntimeException("Expected number after '-'");
+            }
+
+            int value = -parseNumber(advance().text);
+            return new ImmediateOperand(value);
+        }
+
+        if (check(TokenType.IDENT)) {
+            String name = advance().text;
+
+            if (isRegister(name)) {
+                return new RegisterOperand(name);
+            }
+
+            return new IdentifierOperand(name);
+        }
+
+        throw new RuntimeException("token inexperada na operação: " + peek());
+    }
+
+    private int parseNumber(String text) {
+        String t = text.toLowerCase();
+
+        // hex prefix: 0xFF
+        if (t.startsWith("0x")) {
+            return Integer.parseInt(t.substring(2), 16);
+        }
+
+        // hex suffix: FFh
+        if (t.endsWith("h")) {
+            return Integer.parseInt(t.substring(0, t.length() - 1), 16);
+        }
+
+        // decimal
+        return Integer.parseInt(t);
+    }
+
+    private Node parseLine() {
+        Node node;
+
+        if (check(TokenType.IDENT) && lookAhead(TokenType.COLON)) {
+            node = parseLabel();
+        }
+        else if (check(TokenType.IDENT)) {
+            node = parseInstruction();
+        }
+        else {
+            throw new RuntimeException("token invalida na linha: " + peek());
+        }
+
+        // consume newline after line
+        if (check(TokenType.NEWLINE)) {
             advance();
         }
 
-        return new Instruction(mnemonic, List.of());
-    }
-
-
-    private Node parseLine() {
-        if (check(TokenType.IDENT) && lookAhead(TokenType.COLON)) {
-            return parseLabel();
-        }
-
-        return parseInstruction();
+        return node;
     }
 }
