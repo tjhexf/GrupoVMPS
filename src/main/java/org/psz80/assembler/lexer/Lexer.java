@@ -104,6 +104,12 @@ public class Lexer {
                 continue;
             }
 
+            // colon, for labels
+            if (c == ':') {
+                tokens.add(new Token(TokenType.COLON, ":"));
+                advance();
+                continue;
+            }
 
             throw new RuntimeException("Unexpected character: " + c);
         }

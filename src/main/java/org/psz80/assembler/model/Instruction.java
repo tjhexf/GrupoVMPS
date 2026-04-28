@@ -10,4 +10,9 @@ public class Instruction implements Node {
         this.mnemonic = mnemonic.toUpperCase();
         this.operands = operands;
     }
+
+    @Override
+    public String toString() {
+        return "Instruction(" + mnemonic + ")";
+    }
 }
