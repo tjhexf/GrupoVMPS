@@ -7,5 +7,6 @@ public enum TokenType {
     LPAREN,     // (
     RPAREN,     // )
     NEWLINE,    // \n
+    COLON,      // :
     EOF
 }
