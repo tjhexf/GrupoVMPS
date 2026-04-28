@@ -13,6 +13,6 @@ public class Instruction implements Node {
 
     @Override
     public String toString() {
-        return "Instruction(" + mnemonic + ")";
+        return "Instruction(" + mnemonic + ", " + operands + ")";
     }
 }

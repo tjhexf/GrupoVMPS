@@ -1,5 +1,12 @@
 package org.psz80;
 
+import org.psz80.assembler.lexer.Lexer;
+import org.psz80.assembler.lexer.Token;
+import org.psz80.assembler.model.Node;
+import org.psz80.assembler.parser.Parser;
+
+import java.util.List;
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
@@ -13,5 +20,34 @@ public class Main {
             // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
             IO.println("i = " + i);
         }
+
+
+        String source = """
+                start:
+                LD A, -2
+                LD B, A
+                LD A, (IX+5)
+                LD A, (1234)
+                JP start
+            """;
+
+        // --- LEXER ---
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.tokenize();
+
+        System.out.println("TOKENS:");
+        for (Token t : tokens) {
+            System.out.println(t);
+        }
+
+        // --- PARSER ---
+        Parser parser = new Parser(tokens);
+        List<Node> nodes = parser.parse();
+
+        System.out.println("\nNODES:");
+        for (Node node : nodes) {
+            System.out.println(node);
+        }
+
     }
 }

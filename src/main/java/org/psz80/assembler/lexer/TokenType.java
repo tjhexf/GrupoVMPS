@@ -8,5 +8,7 @@ public enum TokenType {
     RPAREN,     // )
     NEWLINE,    // \n
     COLON,      // :
+    PLUS,
+    MINUS,
     EOF
 }

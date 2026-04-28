@@ -1,10 +1,15 @@
 package org.psz80.assembler.model;
 
 public class MemoryOperand extends Operand {
-    public Operand inner;
+
+    private final Operand inner;
 
     public MemoryOperand(Operand inner) {
         this.inner = inner;
+    }
+
+    public Operand getInner() {
+        return inner;
     }
 
     @Override
