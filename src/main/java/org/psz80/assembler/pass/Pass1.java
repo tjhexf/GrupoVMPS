@@ -13,17 +13,27 @@ public class Pass1 {
     private int pc = 0;
 
     private int estimateSize(Instruction inst) {
+
         String m = inst.getMnemonic().toUpperCase();
 
         switch (m) {
+
             case "NOP":
                 return 1;
 
-            case "JP":
-                return 3;
+            case "INC":
+            case "DEC":
+            case "SUB":
+                return 1;
+
+            case "ADD":
+                return 1; // ADD A, r
 
             case "LD":
                 return estimateLD(inst);
+
+            case "JP":
+                return 3;
 
             default:
                 throw new RuntimeException("Unknown instruction: " + m);
