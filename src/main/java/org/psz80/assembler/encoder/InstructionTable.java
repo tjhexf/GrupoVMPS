@@ -102,7 +102,47 @@ public class InstructionTable {
 
                 ctx.writeByte(0x3A);
                 ctx.writeWord(addr);
-            })
+            }),
+
+            new InstructionPattern("INC",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0x04 | (r << 3));
+                    }
+            ),
+
+            new InstructionPattern("DEC",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0x05 | (r << 3));
+                    }
+            ),
+
+            new InstructionPattern("ADD",
+                    new OperandType[]{OperandType.REG, OperandType.REG},
+                    (ops, ctx) -> {
+
+                        RegisterOperand a = (RegisterOperand) ops[0];
+                        if (!a.getName().equalsIgnoreCase("A")) {
+                            throw new RuntimeException("Only ADD A, r supported");
+                        }
+
+                        int r = regCode(((RegisterOperand) ops[1]).getName());
+                        ctx.writeByte(0x80 | r);
+                    }
+            ),
+
+            new InstructionPattern("SUB",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0x90 | r);
+                    }
+            )
+
+
     );
 
     public InstructionPattern find(Instruction inst) {

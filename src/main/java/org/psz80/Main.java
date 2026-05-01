@@ -25,11 +25,10 @@ public class Main {
 
         String source = """
                 start:
-                LD A, -2
-                LD B, A
-                LD A, (IX+5)
-                LD A, (1234)
-                JP start
+                LD A,5
+                INC A
+                DEC B
+                ADD A, B
             """;
 
         // --- LEXER ---
