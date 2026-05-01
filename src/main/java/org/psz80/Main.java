@@ -1,9 +1,9 @@
 package org.psz80;
-
 import org.psz80.assembler.lexer.Lexer;
 import org.psz80.assembler.lexer.Token;
 import org.psz80.assembler.model.Node;
 import org.psz80.assembler.parser.Parser;
+import org.psz80.assembler.pass.Pass1;
 
 import java.util.List;
 
@@ -49,5 +49,15 @@ public class Main {
             System.out.println(node);
         }
 
+
+// ...
+
+        Pass1 pass1 = new Pass1();
+        var symbols = pass1.run(nodes);
+
+        System.out.println("\nSYMBOLS:");
+        for (var entry : symbols.entrySet()) {
+            System.out.println(entry.getKey() + " = " + entry.getValue());
+        }
     }
 }
