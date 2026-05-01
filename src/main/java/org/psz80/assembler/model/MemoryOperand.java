@@ -2,18 +2,18 @@ package org.psz80.assembler.model;
 
 public class MemoryOperand extends Operand {
 
-    private final Operand inner;
+    private final Operand address;
 
-    public MemoryOperand(Operand inner) {
-        this.inner = inner;
+    public MemoryOperand(Operand address) {
+        this.address = address;
     }
 
-    public Operand getInner() {
-        return inner;
+    public Operand getAddress() {
+        return address;
     }
 
     @Override
     public String toString() {
-        return "(" + inner + ")";
+        return "(" + address + ")";
     }
 }
