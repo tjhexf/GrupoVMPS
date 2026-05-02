@@ -16,6 +16,13 @@ public class InstructionTable {
                     ops -> 1
             ),
 
+            new InstructionPattern("HALT",
+                    new OperandType[]{},
+                    (ops, ctx) -> {
+                        ctx.writeByte(0x76);
+                    },
+                    ops -> 1
+            ),
 
             new InstructionPattern("INC",
                     new OperandType[]{OperandType.REG},
