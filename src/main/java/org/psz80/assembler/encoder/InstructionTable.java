@@ -323,6 +323,36 @@ public class InstructionTable {
                         }
                     },
                     ops -> 1
+            ),
+
+            new InstructionPattern("CALL",
+                    new OperandType[]{OperandType.ADDR},
+                    (ops, ctx) -> {
+
+                        int addr;
+
+                        if (ops[0] instanceof ImmediateOperand imm) {
+                            addr = imm.getValue();
+                        } else if (ops[0] instanceof IdentifierOperand id) {
+                            Integer v = ctx.symbols.get(id.getName());
+                            if (v == null) throw new RuntimeException("Unknown label: " + id.getName());
+                            addr = v;
+                        } else {
+                            throw new RuntimeException("Invalid CALL operand");
+                        }
+
+                        ctx.writeByte(0xCD);
+                        ctx.writeWord(addr);
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("RET",
+                    new OperandType[]{},
+                    (ops, ctx) -> {
+                        ctx.writeByte(0xC9);
+                    },
+                    ops -> 1
             )
 
     );
