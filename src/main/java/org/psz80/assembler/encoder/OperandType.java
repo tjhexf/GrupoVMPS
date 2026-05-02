@@ -7,5 +7,6 @@ public enum OperandType {
     MEM_HL,
     MEM_IX,
     MEM_IY,
-    MEM_ADDR
+    MEM_ADDR,
+    REG_PAIR
 }
