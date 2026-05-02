@@ -280,4 +280,14 @@ public class InstructionTable {
             default -> throw new RuntimeException("Unknown register: " + name);
         };
     }
+
+    private static int rpCode(String name) {
+        return switch (name.toUpperCase()) {
+            case "BC" -> 0;
+            case "DE" -> 1;
+            case "HL" -> 2;
+            case "AF" -> 3;
+            default -> throw new RuntimeException("Invalid register pair: " + name);
+        };
+    }
 }
