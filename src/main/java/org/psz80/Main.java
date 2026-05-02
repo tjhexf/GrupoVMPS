@@ -24,11 +24,8 @@ public class Main {
 
 
         String source = """
-                   LD A, 5
-                   AND B
-                   XOR C
-                   OR D
-                   CP E
+                   start:
+                           JR start
             """;
 
         // --- LEXER ---

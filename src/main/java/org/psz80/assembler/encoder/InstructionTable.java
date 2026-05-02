@@ -169,6 +169,35 @@ public class InstructionTable {
                     ops -> 3
             ),
 
+            new InstructionPattern("JR",
+                    new OperandType[]{OperandType.ADDR},
+                    (ops, ctx) -> {
+
+                        int target;
+
+                        if (ops[0] instanceof IdentifierOperand id) {
+                            Integer v = ctx.symbols.get(id.getName());
+                            if (v == null) throw new RuntimeException("Unknown label: " + id.getName());
+                            target = v;
+                        } else if (ops[0] instanceof ImmediateOperand imm) {
+                            target = imm.getValue();
+                        } else {
+                            throw new RuntimeException("Invalid JR operand");
+                        }
+
+                        int offset = target - (ctx.getPC() + 2);
+
+                        // range check
+                        if (offset < -128 || offset > 127) {
+                            throw new RuntimeException("JR target out of range: " + offset);
+                        }
+
+                        ctx.writeByte(0x18);
+                        ctx.writeByte(offset & 0xFF);
+                    },
+                    ops -> 2
+            ),
+
             new InstructionPattern("AND",
                     new OperandType[]{OperandType.REG},
                     (ops, ctx) -> {
