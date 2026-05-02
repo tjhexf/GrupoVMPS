@@ -127,6 +127,36 @@ public class InstructionTable {
             ),
 
             new InstructionPattern("LD",
+                    new OperandType[]{OperandType.MEM_IX, OperandType.REG},
+                    (ops, ctx) -> {
+                        MemoryOperand mem = (MemoryOperand) ops[0];
+                        IndexedOperand idx = (IndexedOperand) mem.getAddress();
+
+                        int r = regCode(((RegisterOperand) ops[1]).getName());
+
+                        ctx.writeByte(0xDD);
+                        ctx.writeByte(0x70 | r);
+                        ctx.writeByte(idx.getOffset());
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.MEM_IY, OperandType.REG},
+                    (ops, ctx) -> {
+                        MemoryOperand mem = (MemoryOperand) ops[0];
+                        IndexedOperand idx = (IndexedOperand) mem.getAddress();
+
+                        int r = regCode(((RegisterOperand) ops[1]).getName());
+
+                        ctx.writeByte(0xFD);
+                        ctx.writeByte(0x70 | r);
+                        ctx.writeByte(idx.getOffset());
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("LD",
                     new OperandType[]{OperandType.REG, OperandType.MEM_ADDR},
                     (ops, ctx) -> {
                         RegisterOperand r = (RegisterOperand) ops[0];
@@ -244,10 +274,26 @@ public class InstructionTable {
             new InstructionPattern("PUSH",
                     new OperandType[]{OperandType.REG_PAIR},
                     (ops, ctx) -> {
-                        String name = ((RegisterOperand) ops[0]).getName(); // ✅ FIX
-                        int rp = rpCode(name);
+                        String name = ((RegisterOperand) ops[0]).getName().toUpperCase();
 
-                        ctx.writeByte(0xC5 | (rp << 4));
+                        switch (name) {
+                            case "BC", "DE", "HL", "AF" -> {
+                                int rp = rpCode(name);
+                                ctx.writeByte(0xC5 | (rp << 4));
+                            }
+
+                            case "IX" -> {
+                                ctx.writeByte(0xDD);
+                                ctx.writeByte(0xE5);
+                            }
+
+                            case "IY" -> {
+                                ctx.writeByte(0xFD);
+                                ctx.writeByte(0xE5);
+                            }
+
+                            default -> throw new RuntimeException("Invalid PUSH operand: " + name);
+                        }
                     },
                     ops -> 1
             ),
@@ -255,14 +301,29 @@ public class InstructionTable {
             new InstructionPattern("POP",
                     new OperandType[]{OperandType.REG_PAIR},
                     (ops, ctx) -> {
-                        String name = ((RegisterOperand) ops[0]).getName(); // ✅ FIX
-                        int rp = rpCode(name);
+                        String name = ((RegisterOperand) ops[0]).getName().toUpperCase();
 
-                        ctx.writeByte(0xC1 | (rp << 4));
+                        switch (name) {
+                            case "BC", "DE", "HL", "AF" -> {
+                                int rp = rpCode(name);
+                                ctx.writeByte(0xC1 | (rp << 4));
+                            }
+
+                            case "IX" -> {
+                                ctx.writeByte(0xDD);
+                                ctx.writeByte(0xE1);
+                            }
+
+                            case "IY" -> {
+                                ctx.writeByte(0xFD);
+                                ctx.writeByte(0xE1);
+                            }
+
+                            default -> throw new RuntimeException("Invalid POP operand: " + name);
+                        }
                     },
                     ops -> 1
             )
-
 
     );
 

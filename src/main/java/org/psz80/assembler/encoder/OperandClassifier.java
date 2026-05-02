@@ -14,6 +14,10 @@ public class OperandClassifier {
                 return OperandType.REG_PAIR;
             }
 
+            if (name.equals("IX") || name.equals("IY")) {
+                return OperandType.REG_PAIR;
+            }
+
             return OperandType.REG;
         }
 
@@ -26,6 +30,7 @@ public class OperandClassifier {
                     name.equals("HL") || name.equals("AF")) {
                 return OperandType.REG_PAIR;
             }
+
 
             return OperandType.ADDR;
         }
