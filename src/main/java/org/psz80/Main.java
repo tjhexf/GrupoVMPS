@@ -24,8 +24,8 @@ public class Main {
 
 
         String source = """
-                       PUSH BC
-                       POP DE
+                       PUSH IY
+                       POP IY
             """;
 
         // --- LEXER ---
