@@ -86,7 +86,7 @@ public class Parser {
     private boolean isRegister(String name) {
         return switch (name.toUpperCase()) {
             case "A", "B", "C", "D", "E", "H", "L" -> true;
-            case "HL", "BC", "DE" -> true;
+            case "HL", "BC", "DE", "AF" -> true;
             default -> false;
         };
     }
