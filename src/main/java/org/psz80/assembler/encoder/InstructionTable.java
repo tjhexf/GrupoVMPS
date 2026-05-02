@@ -239,6 +239,28 @@ public class InstructionTable {
                         ctx.writeByte(0xB8 | r);
                     },
                     ops -> 1
+            ),
+
+            new InstructionPattern("PUSH",
+                    new OperandType[]{OperandType.REG_PAIR},
+                    (ops, ctx) -> {
+                        String name = ((RegisterOperand) ops[0]).getName(); // ✅ FIX
+                        int rp = rpCode(name);
+
+                        ctx.writeByte(0xC5 | (rp << 4));
+                    },
+                    ops -> 1
+            ),
+
+            new InstructionPattern("POP",
+                    new OperandType[]{OperandType.REG_PAIR},
+                    (ops, ctx) -> {
+                        String name = ((RegisterOperand) ops[0]).getName(); // ✅ FIX
+                        int rp = rpCode(name);
+
+                        ctx.writeByte(0xC1 | (rp << 4));
+                    },
+                    ops -> 1
             )
 
 
