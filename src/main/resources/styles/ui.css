@@ -1,0 +1,21 @@
+/* UI styles for emulator mock */
+
+/* highlight current / next instruction for rows and individual cells */
+.table-row-cell.current-instr, .table-cell.current-instr {
+    -fx-background-color: rgba(220,80,60,0.85); /* red-ish */
+    -fx-text-fill: white;
+}
+.table-row-cell.next-instr, .table-cell.next-instr {
+    -fx-background-color: rgba(100,180,240,0.6); /* light blue */
+    -fx-text-fill: black;
+}
+
+/* legend badges (small squares used in toolbar) */
+.legend-current { -fx-background-color: #DC5040; -fx-min-width: 16px; -fx-min-height: 12px; -fx-border-radius: 2px; -fx-background-radius: 2px; }
+.legend-next { -fx-background-color: #64B4F0; -fx-min-width: 16px; -fx-min-height: 12px; -fx-border-radius: 2px; -fx-background-radius: 2px; }
+
+/* CodeArea (monospace) */
+.code-area { -fx-font-family: "Consolas", "Menlo", "Courier New"; -fx-font-size: 12px; }
+
+/* memory table column header background */
+.table-view .column-header-background { -fx-background-color: transparent; }
