@@ -8,7 +8,7 @@ public class Z80 {
     private Memory memoria;
     private Registers registradores;
 
-    public CPU(Memory memoria, Registers registradores) {
+    public Z80(Memory memoria, Registers registradores) {
         this.memoria = memoria;
         this.registradores = registradores;
     }
@@ -29,7 +29,6 @@ public class Z80 {
             case 0x76: //HALT
                 //Ulisses: parar o processador
                 break;
-                case 0x
             case 0x04: //INC
                 break;
             case 0x05:
