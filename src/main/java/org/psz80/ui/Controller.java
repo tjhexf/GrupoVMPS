@@ -17,6 +17,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Random;
+import org.psz80.emulator.system.Z80System;
+import org.psz80.emulator.cpu.Registers;
 
 public class Controller {
 
@@ -27,6 +29,7 @@ public class Controller {
     private final ConsoleComponent consoleComponent = new ConsoleComponent();
     private final InstructionListComponent instructionListComponent = new InstructionListComponent();
     private final RegistersComponent registersComponent = new RegistersComponent();
+    private final Z80System z80System = new Z80System();
 
     private final Button btnNew = new Button("Criar novo");
     private final Button btnOpen = new Button("Abrir arquivo");

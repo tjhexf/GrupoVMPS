@@ -11,7 +11,7 @@ public class Memory {
     }
 
     public int lerByte(int address) {
-        return this.memoria[address & 0xFFFF];
+        return this.memoria[address & 0xFFFF] & 0xFF;
     }
 
     public void escreverByte(int address, int value){
