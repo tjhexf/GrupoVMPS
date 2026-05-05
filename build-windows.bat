@@ -1,2 +1,2 @@
 @echo off
-mvn clean package
+mvn -Pdist clean package
