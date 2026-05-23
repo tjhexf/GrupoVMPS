@@ -10,6 +10,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import org.psz80.assembler.Assembler;
+import org.psz80.emulator.memory.Memory;
 import org.psz80.ui.components.*;
 
 import java.io.File;
@@ -21,6 +23,11 @@ import org.psz80.emulator.system.Z80System;
 import org.psz80.emulator.cpu.Registers;
 
 public class Controller {
+
+    //jolene: objeto do assembler que recebemos do MainApp
+    private final Assembler assembler;
+    //jolene: objeto da memoria que vem do main
+    private final Memory memory;
 
     private final BorderPane root = new BorderPane();
 
@@ -51,7 +58,11 @@ public class Controller {
     private AnimationTimer timer;
     private int stepsPerFrame = 100;
 
-    public Controller() {
+    public Controller(Assembler assembler, Memory memory) {
+        // jolene: construir o assembler
+        this.assembler = assembler;
+        // jolene: construir a memoria
+        this.memory = memory;
         buildUI();
         populateFakeContent();
         attachHandlers();
@@ -233,6 +244,15 @@ public class Controller {
             consoleComponent.appendText("Erro ao salvar: " + ex.getMessage() + "\n");
             return;
         }
+
+        byte[] assembledProgram = assembler.assemble(et.area.getText());
+
+        int startAddress = 0x0000;
+
+        for (int i = 0; i < assembledProgram.length; i++) {
+            memory.escreverByte(startAddress + i, assembledProgram[i]);
+        }
+
         boolean success = !et.area.getText().contains("ERROR");
         if (success) {
             consoleComponent.appendText("Montagem bem-sucedida\n");
