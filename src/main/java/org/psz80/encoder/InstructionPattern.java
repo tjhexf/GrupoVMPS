@@ -1,4 +1,4 @@
-package org.psz80.assembler.encoder;
+package org.psz80.encoder;
 
 import org.psz80.assembler.model.Operand;
 

@@ -2,7 +2,7 @@ package org.psz80.assembler.pass;
 
 import org.psz80.assembler.model.Node;
 import org.psz80.assembler.model.Instruction;
-import org.psz80.assembler.encoder.Encoder;
+import org.psz80.encoder.Encoder;
 
 import java.util.List;
 import java.util.Map;

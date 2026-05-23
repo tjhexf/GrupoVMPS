@@ -4,7 +4,6 @@ import org.psz80.assembler.lexer.*;
 import org.psz80.assembler.parser.*;
 import org.psz80.assembler.pass.*;
 import org.psz80.assembler.model.*;
-import org.psz80.assembler.encoder.*;
 
 import java.util.List;
 import java.util.Map;

@@ -1,7 +1,8 @@
 package org.psz80.assembler.pass;
 
 import org.psz80.assembler.model.*;
-import org.psz80.assembler.encoder.*;
+import org.psz80.encoder.InstructionPattern;
+import org.psz80.encoder.InstructionTable;
 
 import java.util.HashMap;
 import java.util.List;
