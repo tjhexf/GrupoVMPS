@@ -1,6 +1,7 @@
 package org.psz80.assembler;
 
 import org.psz80.assembler.lexer.*;
+import org.psz80.assembler.macro.MacroProcessor;
 import org.psz80.assembler.parser.*;
 import org.psz80.assembler.pass.*;
 import org.psz80.assembler.model.*;
@@ -12,7 +13,11 @@ public class Assembler {
 
     public byte[] assemble(String source) {
 
-        Lexer lexer = new Lexer(source);
+        MacroProcessor macroProcessor = new MacroProcessor(source);
+        String sourceExpandido = macroProcessor.process();
+  
+
+        Lexer lexer = new Lexer(sourceExpandido);
         List<Token> tokens = lexer.tokenize();
 
         Parser parser = new Parser(tokens);
