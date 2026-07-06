@@ -38,7 +38,6 @@ public class Controller {
     private final ConsoleComponent consoleComponent = new ConsoleComponent();
     private final InstructionListComponent instructionListComponent = new InstructionListComponent();
     private final RegistersComponent registersComponent = new RegistersComponent();
-    private final Z80System z80System = new Z80System();
 
     private final Button btnNew = new Button("Criar novo");
     private final Button btnOpen = new Button("Abrir arquivo");
@@ -66,7 +65,7 @@ public class Controller {
         // jolene: construir o sistema
         this.system = system;
         // jolene: construir a memória
-        this.memory = z80System.getMemory();
+        this.memory = system.getMemory();
         
         buildUI();
         populateFakeContent();
