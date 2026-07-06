@@ -11,17 +11,19 @@ import java.util.Map;
 
 public class Assembler {
 
-    public byte[] assemble(String source) {
-
+    public List<Node> parse(String source) {
         MacroProcessor macroProcessor = new MacroProcessor(source);
         String sourceExpandido = macroProcessor.process();
-  
 
         Lexer lexer = new Lexer(sourceExpandido);
         List<Token> tokens = lexer.tokenize();
 
         Parser parser = new Parser(tokens);
-        List<Node> program = parser.parse();
+        return parser.parse();
+    }
+
+    public byte[] assemble(String source) {
+        List<Node> program = parse(source);
 
         Pass1 pass1 = new Pass1();
         Map<String, Integer> symbols = pass1.run(program);
