@@ -5,6 +5,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.psz80.assembler.Assembler;
 import org.psz80.emulator.memory.Memory;
+import org.psz80.emulator.system.Z80System;
 
 public class MainApp extends Application {
 
@@ -12,12 +13,12 @@ public class MainApp extends Application {
     public void start(Stage stage) {
         stage.setTitle("GrupoVMPS - UI Mock");
 
-        // jolene: instanciar o assembler e memória
+        // jolene: instanciar o assembler e Sistema
         Assembler assembler = new Assembler();
-        Memory memory = new Memory();
+        Z80System system = new Z80System();
 
         // instanciar o controller
-        Controller controller = new Controller(assembler, memory);
+        Controller controller = new Controller(assembler, system);
         Scene scene = new Scene(controller.getRoot(), 1000, 700);
         try {
             scene.getStylesheets().add(getClass().getResource("/styles/ui.css").toExternalForm());

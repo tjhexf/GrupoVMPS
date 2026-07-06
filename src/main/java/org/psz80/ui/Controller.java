@@ -26,7 +26,9 @@ public class Controller {
 
     //jolene: objeto do assembler que recebemos do MainApp
     private final Assembler assembler;
-    //jolene: objeto da memoria que vem do main
+    //jolene: objeto do sistema
+    private final Z80System system;
+    //jolene: objeto da memória
     private final Memory memory;
 
     private final BorderPane root = new BorderPane();
@@ -58,11 +60,14 @@ public class Controller {
     private AnimationTimer timer;
     private int stepsPerFrame = 100;
 
-    public Controller(Assembler assembler, Memory memory) {
+    public Controller(Assembler assembler, Z80System system) {
         // jolene: construir o assembler
         this.assembler = assembler;
-        // jolene: construir a memoria
-        this.memory = memory;
+        // jolene: construir o sistema
+        this.system = system;
+        // jolene: construir a memória
+        this.memory = z80System.getMemory();
+        
         buildUI();
         populateFakeContent();
         attachHandlers();
