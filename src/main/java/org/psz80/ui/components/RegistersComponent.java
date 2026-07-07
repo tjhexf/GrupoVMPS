@@ -6,10 +6,17 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Priority;
+import org.psz80.emulator.cpu.Registers;
 
 public class RegistersComponent {
 
     private final VBox regsContainer = new VBox();
+    private boolean built = false;
+
+    private ObservableList<RegisterRow> rows8bit;
+    private ObservableList<RegisterRow> rows16bit;
+    private ObservableList<RegisterRow> rowsEspeciais;
+    private ObservableList<FlagRow> rowsFlags;
 
     public RegistersComponent() {
         regsContainer.setFillWidth(true);
@@ -18,38 +25,47 @@ public class RegistersComponent {
     }
 
     public Node getRoot() {
+        if (built) return regsContainer;
+
         regsContainer.getChildren().clear();
 
         VBox titleWrapper = new VBox();
         titleWrapper.getChildren().add(new Label("Registradores"));
         regsContainer.getChildren().add(titleWrapper);
 
-        // registradores principais (8 bits)
-        VBox main8BitsSection = createSection("Registradores Principais (8 bits)",
-            new String[]{"A", "B", "C", "D", "E", "H", "L"},
-            new String[]{"00", "00", "00", "00", "00", "00", "00"});
-        regsContainer.getChildren().add(main8BitsSection);
+        rows8bit = FXCollections.observableArrayList(
+            new RegisterRow("A", "00"), new RegisterRow("B", "00"),
+            new RegisterRow("C", "00"), new RegisterRow("D", "00"),
+            new RegisterRow("E", "00"), new RegisterRow("H", "00"),
+            new RegisterRow("L", "00"));
+        regsContainer.getChildren().add(createRegisterTable("Registradores Principais (8 bits)", rows8bit));
 
-        // flags
-        VBox flagSection = createFlagTable();
-        regsContainer.getChildren().add(flagSection);
+        rowsFlags = FXCollections.observableArrayList(
+            new FlagRow("7", "S", "0"),
+            new FlagRow("6", "Z", "0"),
+            new FlagRow("5", "5", "0"),
+            new FlagRow("4", "H", "0"),
+            new FlagRow("3", "3", "0"),
+            new FlagRow("2", "P/V", "0"),
+            new FlagRow("1", "N", "0"),
+            new FlagRow("0", "C", "0"));
+        regsContainer.getChildren().add(createFlagTable(rowsFlags));
 
-        // registradores de 16 bits
-        VBox main16BitsSection = createSection("Registradores de 16 bits (pares)",
-            new String[]{"AF", "BC", "DE", "HL"},
-            new String[]{"0000", "0000", "0000", "0000"});
-        regsContainer.getChildren().add(main16BitsSection);
+        rows16bit = FXCollections.observableArrayList(
+            new RegisterRow("AF", "0000"), new RegisterRow("BC", "0000"),
+            new RegisterRow("DE", "0000"), new RegisterRow("HL", "0000"));
+        regsContainer.getChildren().add(createRegisterTable("Registradores de 16 bits (pares)", rows16bit));
 
-        // registradores especiais
-        VBox specialRegsSection = createSection("Registradores Especiais",
-            new String[]{"PC", "SP", "IX", "IY"},
-            new String[]{"0000", "0000", "0000", "0000"});
-        regsContainer.getChildren().add(specialRegsSection);
+        rowsEspeciais = FXCollections.observableArrayList(
+            new RegisterRow("PC", "0000"), new RegisterRow("SP", "0000"),
+            new RegisterRow("IX", "0000"), new RegisterRow("IY", "0000"));
+        regsContainer.getChildren().add(createRegisterTable("Registradores Especiais", rowsEspeciais));
 
+        built = true;
         return regsContainer;
     }
 
-    private VBox createSection(String title, String[] names, String[] values) {
+    private VBox createRegisterTable(String title, ObservableList<RegisterRow> rows) {
         VBox section = new VBox();
         section.setSpacing(2);
         section.getChildren().add(new Label(title));
@@ -64,11 +80,6 @@ public class RegistersComponent {
         valCol.setPrefWidth(60);
 
         table.getColumns().addAll(nameCol, valCol);
-
-        ObservableList<RegisterRow> rows = FXCollections.observableArrayList();
-        for (int i = 0; i < names.length; i++) {
-            rows.add(new RegisterRow(names[i], values[i]));
-        }
         table.setItems(rows);
         table.setEditable(false);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -79,7 +90,7 @@ public class RegistersComponent {
         return section;
     }
 
-    private VBox createFlagTable() {
+    private VBox createFlagTable(ObservableList<FlagRow> rows) {
         VBox section = new VBox();
         section.setSpacing(2);
         section.getChildren().add(new Label("Registrador de Flags (F)"));
@@ -98,17 +109,6 @@ public class RegistersComponent {
         valCol.setPrefWidth(50);
 
         table.getColumns().addAll(bitCol, nameCol, valCol);
-
-        ObservableList<FlagRow> rows = FXCollections.observableArrayList(
-            new FlagRow("7", "S", "0"),
-            new FlagRow("6", "Z", "0"),
-            new FlagRow("5", "5", "0"),
-            new FlagRow("4", "H", "0"),
-            new FlagRow("3", "3", "0"),
-            new FlagRow("2", "P/V", "0"),
-            new FlagRow("1", "N", "0"),
-            new FlagRow("0", "C", "0")
-        );
         table.setItems(rows);
         table.setEditable(false);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -117,6 +117,37 @@ public class RegistersComponent {
 
         section.getChildren().add(table);
         return section;
+    }
+
+    public void refresh(Registers r) {
+        if (!built) return;
+
+        rows8bit.get(0).valueProperty().set(String.format("%02X", r.getAF() >> 8));
+        rows8bit.get(1).valueProperty().set(String.format("%02X", r.getB()));
+        rows8bit.get(2).valueProperty().set(String.format("%02X", r.getC()));
+        rows8bit.get(3).valueProperty().set(String.format("%02X", r.getD()));
+        rows8bit.get(4).valueProperty().set(String.format("%02X", r.getE()));
+        rows8bit.get(5).valueProperty().set(String.format("%02X", r.getH()));
+        rows8bit.get(6).valueProperty().set(String.format("%02X", r.getL()));
+
+        rowsFlags.get(0).valueProperty().set(r.getSFlag() ? "1" : "0");
+        rowsFlags.get(1).valueProperty().set(r.getZFlag() ? "1" : "0");
+        rowsFlags.get(2).valueProperty().set("0");
+        rowsFlags.get(3).valueProperty().set(r.getHFlag() ? "1" : "0");
+        rowsFlags.get(4).valueProperty().set("0");
+        rowsFlags.get(5).valueProperty().set(r.getPVFlag() ? "1" : "0");
+        rowsFlags.get(6).valueProperty().set(r.getNFlag() ? "1" : "0");
+        rowsFlags.get(7).valueProperty().set(r.getCFlag() ? "1" : "0");
+
+        rows16bit.get(0).valueProperty().set(String.format("%04X", r.getAF()));
+        rows16bit.get(1).valueProperty().set(String.format("%04X", r.getBC()));
+        rows16bit.get(2).valueProperty().set(String.format("%04X", r.getDE()));
+        rows16bit.get(3).valueProperty().set(String.format("%04X", r.getHL()));
+
+        rowsEspeciais.get(0).valueProperty().set(String.format("%04X", r.getPC()));
+        rowsEspeciais.get(1).valueProperty().set(String.format("%04X", r.getSP()));
+        rowsEspeciais.get(2).valueProperty().set(String.format("%04X", r.getIX()));
+        rowsEspeciais.get(3).valueProperty().set(String.format("%04X", r.getIY()));
     }
 
     public static class RegisterRow {
