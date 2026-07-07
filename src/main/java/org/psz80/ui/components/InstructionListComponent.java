@@ -1,5 +1,7 @@
 package org.psz80.ui.components;
 
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -11,6 +13,8 @@ public class InstructionListComponent {
 
     private final TableView<InstructionRow> instructionTable = new TableView<>();
     private final ObservableList<InstructionRow> instructionRows = FXCollections.observableArrayList();
+    private final SimpleIntegerProperty highlightedIdx = new SimpleIntegerProperty(-1);
+    private final SimpleIntegerProperty nextIdx = new SimpleIntegerProperty(-1);
 
     public InstructionListComponent() {
         setupTable();
@@ -23,6 +27,22 @@ public class InstructionListComponent {
 
         TableColumn<InstructionRow, String> txtCol = new TableColumn<>("Instrução");
         txtCol.setCellValueFactory(c -> c.getValue().textProperty());
+        txtCol.setCellFactory(tc -> new TableCell<InstructionRow, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item);
+                getStyleClass().removeAll("current-instr", "next-instr");
+                if (!empty && item != null && getTableRow() != null) {
+                    int idx = getTableRow().getIndex();
+                    if (idx == highlightedIdx.get()) {
+                        getStyleClass().add("current-instr");
+                    } else if (idx == nextIdx.get()) {
+                        getStyleClass().add("next-instr");
+                    }
+                }
+            }
+        });
         txtCol.prefWidthProperty().bind(instructionTable.widthProperty().subtract(idxCol.widthProperty()).subtract(2));
 
         instructionTable.getColumns().addAll(idxCol, txtCol);
@@ -53,6 +73,28 @@ public class InstructionListComponent {
 
     public void addInstruction(int idx, String text) {
         instructionRows.add(new InstructionRow(idx, text));
+    }
+
+    public void setHighlightedIdx(int idx) {
+        this.highlightedIdx.set(idx);
+        this.nextIdx.set(-1);
+        forceRefresh();
+        if (idx >= 0 && idx < instructionRows.size()) {
+            instructionTable.scrollTo(idx);
+        }
+    }
+
+    public void setNextIdx(int idx) {
+        this.nextIdx.set(idx);
+        forceRefresh();
+    }
+
+    private void forceRefresh() {
+        for (InstructionRow row : instructionRows) {
+            String t = row.text.get();
+            row.text.set(null);
+            row.text.set(t);
+        }
     }
 
     public static class InstructionRow {

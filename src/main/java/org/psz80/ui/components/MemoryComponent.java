@@ -1,5 +1,6 @@
 package org.psz80.ui.components;
 
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -9,13 +10,16 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import org.psz80.emulator.memory.Memory;
 
 public class MemoryComponent {
 
     private final TableView<MemoryRow> memoryTable = new TableView<>();
     private final ObservableList<MemoryRow> memoryRows = FXCollections.observableArrayList();
     private final ComboBox<String> memorySelector = new ComboBox<>();
-    private final byte[] memory = new byte[65536];
+    private Memory memory;
+    private final SimpleIntegerProperty highlightedPc = new SimpleIntegerProperty(-1);
+    private final SimpleIntegerProperty nextPc = new SimpleIntegerProperty(-1);
 
     public MemoryComponent() {
         setupTable();
@@ -31,6 +35,22 @@ public class MemoryComponent {
             final int col = i;
             TableColumn<MemoryRow, String> c = new TableColumn<>(String.format("%X", i));
             c.setCellValueFactory(cell -> cell.getValue().byteProperty(col));
+            c.setCellFactory(tc -> new TableCell<MemoryRow, String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item);
+                    getStyleClass().removeAll("current-instr", "next-instr");
+                    if (!empty && item != null && getTableRow() != null && getTableRow().getItem() != null) {
+                        int addr = getTableRow().getItem().getBaseAddress() + col;
+                        if (addr == highlightedPc.get()) {
+                            getStyleClass().add("current-instr");
+                        } else if (addr == nextPc.get()) {
+                            getStyleClass().add("next-instr");
+                        }
+                    }
+                }
+            });
             memoryTable.getColumns().add(c);
         }
 
@@ -67,12 +87,9 @@ public class MemoryComponent {
         memoryRows.clear();
         for (int r = 0; r < 4096; r++) {
             int baseAddr = r * 16;
-            MemoryRow mr = new MemoryRow(baseAddr);
-            for (int b = 0; b < 16; b++) {
-                mr.setByte(b, String.format("%02X", memory[baseAddr + b] & 0xFF));
-            }
-            memoryRows.add(mr);
+            memoryRows.add(new MemoryRow(baseAddr));
         }
+        scrollToRegion();
     }
 
     public Node getRoot() {
@@ -97,38 +114,48 @@ public class MemoryComponent {
         return memoryTable;
     }
 
-    public void populate(int rows) {
-        for (int i = 0; i < 65536; i++) {
-            memory[i] = (byte) (i & 0xFF);
-        }
-        populateAll();
-        scrollToRegion();
+    public void setMemory(Memory memory) {
+        this.memory = memory;
     }
 
-    public void updateMemory(int address, byte value) {
-        memory[address] = value;
-        int row = address / 16;
-        int col = address % 16;
+    public void populate() {
+        populateAll();
+    }
+
+    public void setHighlightedPc(int pc) {
+        this.highlightedPc.set(pc & 0xFFFF);
+        this.nextPc.set(-1);
+        refresh();
+        int row = (pc & 0xFFFF) / 16;
         if (row < memoryRows.size()) {
-            memoryRows.get(row).setByte(col, String.format("%02X", value & 0xFF));
+            memoryTable.scrollTo(row);
         }
+    }
+
+    public void setNextPc(int pc) {
+        this.nextPc.set(pc & 0xFFFF);
+        refresh();
     }
 
     public void refresh() {
+        if (memory == null) return;
         for (int row = 0; row < memoryRows.size(); row++) {
             MemoryRow mr = memoryRows.get(row);
             int baseAddr = row * 16;
             for (int col = 0; col < 16; col++) {
-                mr.setByte(col, String.format("%02X", memory[baseAddr + col] & 0xFF));
+                mr.bytes[col].set(null);
+                mr.bytes[col].set(String.format("%02X", memory.lerByte(baseAddr + col)));
             }
         }
     }
 
     public static class MemoryRow {
+        private final int baseAddress;
         private final StringProperty address = new SimpleStringProperty();
         private final StringProperty[] bytes = new StringProperty[16];
 
         public MemoryRow(int baseAddress) {
+            this.baseAddress = baseAddress;
             address.set(String.format("%04X", baseAddress & 0xFFFF));
             for (int i = 0; i < 16; i++) {
                 bytes[i] = new SimpleStringProperty("00");
@@ -138,5 +165,6 @@ public class MemoryComponent {
         public StringProperty addressProperty() { return address; }
         public StringProperty byteProperty(int idx) { return bytes[idx]; }
         public void setByte(int idx, String value) { bytes[idx].set(value); }
+        public int getBaseAddress() { return baseAddress; }
     }
 }

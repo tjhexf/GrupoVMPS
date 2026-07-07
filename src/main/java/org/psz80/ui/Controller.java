@@ -17,9 +17,14 @@ import org.psz80.ui.components.*;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.stream.Collectors;
+import org.psz80.assembler.model.Instruction;
+import org.psz80.assembler.model.Node;
+import org.psz80.assembler.model.Operand;
 import org.psz80.emulator.system.Z80System;
+import org.psz80.encoder.InstructionTable;
 import org.psz80.emulator.cpu.Registers;
 
 public class Controller {
@@ -48,16 +53,13 @@ public class Controller {
     private final ToggleButton btnStepMode = new ToggleButton("Executar - step");
     private final Button btnNextStep = new Button("Próximo step");
 
-    private final byte[] fakeMemory = new byte[65536];
-    private int fakePC = 0;
-    private final Random rnd = new Random(1234);
-
     private boolean isMounted = false;
     private boolean isRunning = false;
     private boolean isStepMode = false;
 
     private AnimationTimer timer;
     private int stepsPerFrame = 100;
+    private List<Integer> instrPcs = new ArrayList<>();
 
     public Controller(Assembler assembler, Z80System system) {
         // jolene: construir o assembler
@@ -66,9 +68,10 @@ public class Controller {
         this.system = system;
         // jolene: construir a memória
         this.memory = system.getMemory();
+        memoryComponent.setMemory(this.memory);
         
         buildUI();
-        populateFakeContent();
+        initializeContent();
         attachHandlers();
         ((ToolBar) root.getTop()).getItems().add(createLegend());
     }
@@ -133,10 +136,10 @@ public class Controller {
         return row;
     }
 
-    private void populateFakeContent() {
-        String sample = ".MODEL SMALL\n.STACK 100H\n.CODE\nMOV AX, 0x3C\nMOV BX, 0x10\nADD AX, BX\nSUB AX, BX\nINT 21H\n";
+    private void initializeContent() {
+        String sample = "LD A, 0x05\nLD B, 0x03\nADD A, B\nHALT\n";
         editorComponent.createNewTab(null, sample);
-        memoryComponent.populate(256);
+        memoryComponent.populate();
         consoleComponent.getConsoleArea().setText("Console I/O (mock)\n");
     }
 
@@ -236,57 +239,68 @@ public class Controller {
         EditorComponent.EditorTab et = editorComponent.getActiveEditorTab();
         if (et == null) return;
         try {
-            if (et.file == null) {
-                FileChooser fc = new FileChooser();
-                fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("ASM files", "*.asm", "*.s"));
-                File f = fc.showSaveDialog(root.getScene().getWindow());
-                if (f == null) return;
-                et.file = f;
+            byte[] assembled = assembler.assemble(et.area.getText());
+            int[] programa = new int[assembled.length];
+            for (int i = 0; i < assembled.length; i++) {
+                programa[i] = assembled[i] & 0xFF;
             }
-            Files.write(et.file.toPath(), et.area.getText().getBytes(StandardCharsets.UTF_8));
-        } catch (Exception ex) {
-            consoleComponent.appendText("Erro ao salvar: " + ex.getMessage() + "\n");
-            return;
-        }
-
-        byte[] assembledProgram = assembler.assemble(et.area.getText());
-
-        int startAddress = 0x0000;
-
-        for (int i = 0; i < assembledProgram.length; i++) {
-            memory.escreverByte(startAddress + i, assembledProgram[i]);
-        }
-
-        boolean success = !et.area.getText().contains("ERROR");
-        if (success) {
-            consoleComponent.appendText("Montagem bem-sucedida\n");
+            system.reset();
+            system.loadProgram(0x0000, programa);
+            memoryComponent.refresh();
+            registersComponent.refresh(system.getRegisters());
+            memoryComponent.setHighlightedPc(system.getRegisters().getPC());
+            consoleComponent.appendText("Montagem OK (" + programa.length + " bytes)\n");
             enableExecutionButtons();
             parseInstructions(et);
-        } else {
-            consoleComponent.appendText("Erro na montagem\n");
+            highlightCurrentInstruction(system.getRegisters().getPC());
+        } catch (Exception ex) {
+            consoleComponent.appendText("Erro na montagem: " + ex.getMessage() + "\n");
             disableExecutionButtons();
         }
     }
 
     private void parseInstructions(EditorComponent.EditorTab et) {
-        et.getInstructionRows().clear();
         instructionListComponent.clearInstructions();
-        String[] lines = et.area.getText().split("\r?\n");
-        boolean inCode = false;
-        int idx = 0;
-        for (String line : lines) {
-            String t = line.trim();
-            if (t.isEmpty()) continue;
-            if (t.startsWith(".CODE")) {
-                inCode = true;
-                continue;
+        instrPcs.clear();
+        try {
+            List<Node> nodes = assembler.parse(et.area.getText());
+            InstructionTable table = new InstructionTable();
+            int pc = 0;
+            int idx = 0;
+            for (Node node : nodes) {
+                if (node instanceof Instruction inst) {
+                    instrPcs.add(pc);
+                    String text = inst.getMnemonic();
+                    if (!inst.getOperands().isEmpty()) {
+                        text += " " + inst.getOperands().stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining(", "));
+                    }
+                    instructionListComponent.addInstruction(idx, text);
+                    Operand[] ops = inst.getOperands().toArray(new Operand[0]);
+                    pc += table.find(inst).size(ops);
+                    idx++;
+                }
             }
-            if (!inCode) continue;
-            EditorComponent.InstructionRow er = new EditorComponent.InstructionRow(idx, t);
-            et.getInstructionRows().add(er);
-            instructionListComponent.addInstruction(idx, t);
-            idx++;
+        } catch (Exception ex) {
+            consoleComponent.appendText("Erro ao analisar: " + ex.getMessage() + "\n");
         }
+    }
+
+    private void highlightCurrentInstruction(int pc) {
+        int idx = -1;
+        for (int i = 0; i < instrPcs.size(); i++) {
+            if (instrPcs.get(i) <= pc) idx = i;
+        }
+        instructionListComponent.setHighlightedIdx(idx);
+    }
+
+    private void highlightNextInstruction(int pc) {
+        int idx = -1;
+        for (int i = 0; i < instrPcs.size(); i++) {
+            if (instrPcs.get(i) <= pc) idx = i;
+        }
+        instructionListComponent.setNextIdx(idx);
     }
 
     private void startSimulation() {
@@ -300,8 +314,25 @@ public class Controller {
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                for (int i = 0; i < stepsPerFrame; i++) fakeStep();
+                int startPc = system.getRegisters().getPC();
+                for (int i = 0; i < stepsPerFrame; i++) {
+                    if (system.isHalted()) {
+                        stopSimulation();
+                        consoleComponent.appendText("CPU em HALT\n");
+                        memoryComponent.refresh();
+                        registersComponent.refresh(system.getRegisters());
+                        memoryComponent.setHighlightedPc(system.getRegisters().getPC());
+                        highlightCurrentInstruction(system.getRegisters().getPC());
+                        return;
+                    }
+                    system.step();
+                }
                 memoryComponent.refresh();
+                registersComponent.refresh(system.getRegisters());
+                memoryComponent.setHighlightedPc(startPc);
+                memoryComponent.setNextPc(system.getRegisters().getPC());
+                highlightCurrentInstruction(startPc);
+                highlightNextInstruction(system.getRegisters().getPC());
             }
         };
         timer.start();
@@ -318,15 +349,19 @@ public class Controller {
     }
 
     private void performSingleStep() {
-        fakeStep();
+        if (system.isHalted()) {
+            consoleComponent.appendText("CPU em HALT\n");
+            return;
+        }
+        int currentPc = system.getRegisters().getPC();
+        system.step();
         memoryComponent.refresh();
-    }
-
-    private void fakeStep() {
-        int idx = fakePC & 0xFFFF;
-        byte v = (byte) rnd.nextInt(256);
-        fakeMemory[idx] = v;
-        memoryComponent.updateMemory(idx, v);
-        fakePC = (fakePC + 1) & 0xFFFF;
+        registersComponent.refresh(system.getRegisters());
+        memoryComponent.setHighlightedPc(currentPc);
+        highlightCurrentInstruction(currentPc);
+        if (!system.isHalted()) {
+            memoryComponent.setNextPc(system.getRegisters().getPC());
+            highlightNextInstruction(system.getRegisters().getPC());
+        }
     }
 }
