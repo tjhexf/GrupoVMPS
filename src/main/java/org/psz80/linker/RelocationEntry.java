@@ -1,6 +1,6 @@
 package org.psz80.linker;
 
-// representa um ponto do código que precisa ser corrigido.
+// fernanda: representa um ponto do código que precisa ser corrigido.
 public class RelocationEntry {
 
     private final int offset;

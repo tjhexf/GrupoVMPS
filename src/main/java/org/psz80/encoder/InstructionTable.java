@@ -8,348 +8,324 @@ public class InstructionTable {
     private final OperandClassifier classifier = new OperandClassifier();
 
     private final List<InstructionPattern> patterns = List.of(
-        new InstructionPattern(
-            "NOP",
-            new OperandType[] {},
-            (ops, ctx) -> ctx.writeByte(0x00),
-            ops -> 1
-        ),
+            new InstructionPattern("NOP",
+                    new OperandType[]{},
+                    (ops, ctx) -> ctx.writeByte(0x00),
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "HALT",
-            new OperandType[] {},
-            (ops, ctx) -> {
-                ctx.writeByte(0x76);
-            },
-            ops -> 1
-        ),
+            new InstructionPattern("HALT",
+                    new OperandType[]{},
+                    (ops, ctx) -> {
+                        ctx.writeByte(0x76);
+                    },
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "INC",
-            new OperandType[] { OperandType.REG },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0x04 | (r << 3));
-            },
-            ops -> 1
-        ),
+            new InstructionPattern("INC",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0x04 | (r << 3));
+                    },
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "DEC",
-            new OperandType[] { OperandType.REG },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0x05 | (r << 3));
-            },
-            ops -> 1
-        ),
+            new InstructionPattern("DEC",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0x05 | (r << 3));
+                    },
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "ADD",
-            new OperandType[] { OperandType.REG, OperandType.REG },
-            (ops, ctx) -> {
-                RegisterOperand a = (RegisterOperand) ops[0];
-                if (!a.getName().equalsIgnoreCase("A")) {
-                    throw new RuntimeException("Only ADD A, r supported");
-                }
+            new InstructionPattern("ADD",
+                    new OperandType[]{OperandType.REG, OperandType.REG},
+                    (ops, ctx) -> {
+                        RegisterOperand a = (RegisterOperand) ops[0];
+                        if (!a.getName().equalsIgnoreCase("A")) {
+                            throw new RuntimeException("Only ADD A, r supported");
+                        }
 
-                int r = regCode(((RegisterOperand) ops[1]).getName());
-                ctx.writeByte(0x80 | r);
-            },
-            ops -> 1
-        ),
+                        int r = regCode(((RegisterOperand) ops[1]).getName());
+                        ctx.writeByte(0x80 | r);
+                    },
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "SUB",
-            new OperandType[] { OperandType.REG },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0x90 | r);
-            },
-            ops -> 1
-        ),
+            new InstructionPattern("SUB",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0x90 | r);
+                    },
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.REG, OperandType.REG },
-            (ops, ctx) -> {
-                int r1 = regCode(((RegisterOperand) ops[0]).getName());
-                int r2 = regCode(((RegisterOperand) ops[1]).getName());
-                ctx.writeByte(0x40 | (r1 << 3) | r2);
-            },
-            ops -> 1
-        ),
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.REG, OperandType.REG},
+                    (ops, ctx) -> {
+                        int r1 = regCode(((RegisterOperand) ops[0]).getName());
+                        int r2 = regCode(((RegisterOperand) ops[1]).getName());
+                        ctx.writeByte(0x40 | (r1 << 3) | r2);
+                    },
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.REG, OperandType.IMM },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                int val = ((ImmediateOperand) ops[1]).getValue();
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.REG, OperandType.IMM},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        int val = ((ImmediateOperand) ops[1]).getValue();
 
-                ctx.writeByte(0x06 | (r << 3));
-                ctx.writeByte(val);
-            },
-            ops -> 2
-        ),
+                        ctx.writeByte(0x06 | (r << 3));
+                        ctx.writeByte(val);
+                    },
+                    ops -> 2
+            ),
 
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.REG, OperandType.MEM_HL },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0x46 | (r << 3));
-            },
-            ops -> 1
-        ),
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.REG, OperandType.MEM_HL},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0x46 | (r << 3));
+                    },
+                    ops -> 1
+            ),
 
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.REG, OperandType.MEM_IX },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.REG, OperandType.MEM_IX},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
 
-                MemoryOperand mem = (MemoryOperand) ops[1];
-                IndexedOperand idx = (IndexedOperand) mem.getAddress();
+                        MemoryOperand mem = (MemoryOperand) ops[1];
+                        IndexedOperand idx = (IndexedOperand) mem.getAddress();
 
-                ctx.writeByte(0xDD);
-                ctx.writeByte(0x46 | (r << 3));
-                ctx.writeByte(idx.getOffset());
-            },
-            ops -> 3
-        ),
-
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.REG, OperandType.MEM_IY },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-
-                MemoryOperand mem = (MemoryOperand) ops[1];
-                IndexedOperand idx = (IndexedOperand) mem.getAddress();
-
-                ctx.writeByte(0xFD);
-                ctx.writeByte(0x46 | (r << 3));
-                ctx.writeByte(idx.getOffset());
-            },
-            ops -> 3
-        ),
-
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.MEM_IX, OperandType.REG },
-            (ops, ctx) -> {
-                MemoryOperand mem = (MemoryOperand) ops[0];
-                IndexedOperand idx = (IndexedOperand) mem.getAddress();
-
-                int r = regCode(((RegisterOperand) ops[1]).getName());
-
-                ctx.writeByte(0xDD);
-                ctx.writeByte(0x70 | r);
-                ctx.writeByte(idx.getOffset());
-            },
-            ops -> 3
-        ),
-
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.MEM_IY, OperandType.REG },
-            (ops, ctx) -> {
-                MemoryOperand mem = (MemoryOperand) ops[0];
-                IndexedOperand idx = (IndexedOperand) mem.getAddress();
-
-                int r = regCode(((RegisterOperand) ops[1]).getName());
-
-                ctx.writeByte(0xFD);
-                ctx.writeByte(0x70 | r);
-                ctx.writeByte(idx.getOffset());
-            },
-            ops -> 3
-        ),
-
-        new InstructionPattern(
-            "LD",
-            new OperandType[] { OperandType.REG, OperandType.MEM_ADDR },
-            (ops, ctx) -> {
-                RegisterOperand r = (RegisterOperand) ops[0];
-
-                if (!r.getName().equalsIgnoreCase("A")) {
-                    throw new RuntimeException("Only LD A, (nn) supported");
-                }
-
-                MemoryOperand mem = (MemoryOperand) ops[1];
-                Operand inner = mem.getAddress();
-
-                ctx.writeByte(0x3A);
-
-                if (inner instanceof ImmediateOperand imm) {
-                    ctx.writeAddress16Immediate(imm.getValue());
-                } else if (inner instanceof IdentifierOperand id) {
-                    ctx.writeAddress16Symbol(id.getName());
-                } else {
-                    throw new RuntimeException("Invalid memory address");
-                }
-            },
-            ops -> 3
-        ),
-
-        new InstructionPattern(
-            "JP",
-            new OperandType[] { OperandType.ADDR },
-            (ops, ctx) -> {
-                ctx.writeByte(0xC3);
-
-                if (ops[0] instanceof ImmediateOperand imm) {
-                    ctx.writeAddress16Immediate(imm.getValue());
-                } else if (ops[0] instanceof IdentifierOperand id) {
-                    ctx.writeAddress16Symbol(id.getName());
-                } else {
-                    throw new RuntimeException("Invalid JP operand");
-                }
-            },
-            ops -> 3
-        ),
-
-        new InstructionPattern(
-            "JR",
-            new OperandType[] { OperandType.ADDR },
-            (ops, ctx) -> {
-                ctx.writeByte(0x18);
-
-                if (ops[0] instanceof IdentifierOperand id) {
-                    ctx.writeRelative8Symbol(id.getName());
-                } else if (ops[0] instanceof ImmediateOperand imm) {
-                    ctx.writeRelative8Immediate(imm.getValue());
-                } else {
-                    throw new RuntimeException("Invalid JR operand");
-                }
-            },
-            ops -> 2
-        ),
-
-        new InstructionPattern(
-            "AND",
-            new OperandType[] { OperandType.REG },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0xA0 | r);
-            },
-            ops -> 1
-        ),
-
-        new InstructionPattern(
-            "XOR",
-            new OperandType[] { OperandType.REG },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0xA8 | r);
-            },
-            ops -> 1
-        ),
-
-        new InstructionPattern(
-            "OR",
-            new OperandType[] { OperandType.REG },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0xB0 | r);
-            },
-            ops -> 1
-        ),
-
-        new InstructionPattern(
-            "CP",
-            new OperandType[] { OperandType.REG },
-            (ops, ctx) -> {
-                int r = regCode(((RegisterOperand) ops[0]).getName());
-                ctx.writeByte(0xB8 | r);
-            },
-            ops -> 1
-        ),
-
-        new InstructionPattern(
-            "PUSH",
-            new OperandType[] { OperandType.REG_PAIR },
-            (ops, ctx) -> {
-                String name = ((RegisterOperand) ops[0])
-                    .getName()
-                    .toUpperCase();
-
-                switch (name) {
-                    case "BC", "DE", "HL", "AF" -> {
-                        int rp = rpCode(name);
-                        ctx.writeByte(0xC5 | (rp << 4));
-                    }
-                    case "IX" -> {
                         ctx.writeByte(0xDD);
-                        ctx.writeByte(0xE5);
-                    }
-                    case "IY" -> {
+                        ctx.writeByte(0x46 | (r << 3));
+                        ctx.writeByte(idx.getOffset());
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.REG, OperandType.MEM_IY},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+
+                        MemoryOperand mem = (MemoryOperand) ops[1];
+                        IndexedOperand idx = (IndexedOperand) mem.getAddress();
+
                         ctx.writeByte(0xFD);
-                        ctx.writeByte(0xE5);
-                    }
-                    default -> throw new RuntimeException(
-                        "Invalid PUSH operand: " + name
-                    );
-                }
-            },
-            ops -> 1
-        ),
+                        ctx.writeByte(0x46 | (r << 3));
+                        ctx.writeByte(idx.getOffset());
+                    },
+                    ops -> 3
+            ),
 
-        new InstructionPattern(
-            "POP",
-            new OperandType[] { OperandType.REG_PAIR },
-            (ops, ctx) -> {
-                String name = ((RegisterOperand) ops[0])
-                    .getName()
-                    .toUpperCase();
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.MEM_IX, OperandType.REG},
+                    (ops, ctx) -> {
+                        MemoryOperand mem = (MemoryOperand) ops[0];
+                        IndexedOperand idx = (IndexedOperand) mem.getAddress();
 
-                switch (name) {
-                    case "BC", "DE", "HL", "AF" -> {
-                        int rp = rpCode(name);
-                        ctx.writeByte(0xC1 | (rp << 4));
-                    }
-                    case "IX" -> {
+                        int r = regCode(((RegisterOperand) ops[1]).getName());
+
                         ctx.writeByte(0xDD);
-                        ctx.writeByte(0xE1);
-                    }
-                    case "IY" -> {
+                        ctx.writeByte(0x70 | r);
+                        ctx.writeByte(idx.getOffset());
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.MEM_IY, OperandType.REG},
+                    (ops, ctx) -> {
+                        MemoryOperand mem = (MemoryOperand) ops[0];
+                        IndexedOperand idx = (IndexedOperand) mem.getAddress();
+
+                        int r = regCode(((RegisterOperand) ops[1]).getName());
+
                         ctx.writeByte(0xFD);
-                        ctx.writeByte(0xE1);
-                    }
-                    default -> throw new RuntimeException(
-                        "Invalid POP operand: " + name
-                    );
-                }
-            },
-            ops -> 1
-        ),
+                        ctx.writeByte(0x70 | r);
+                        ctx.writeByte(idx.getOffset());
+                    },
+                    ops -> 3
+            ),
 
-        new InstructionPattern(
-            "CALL",
-            new OperandType[] { OperandType.ADDR },
-            (ops, ctx) -> {
-                ctx.writeByte(0xCD);
+            new InstructionPattern("LD",
+                    new OperandType[]{OperandType.REG, OperandType.MEM_ADDR},
+                    (ops, ctx) -> {
+                        RegisterOperand r = (RegisterOperand) ops[0];
 
-                if (ops[0] instanceof ImmediateOperand imm) {
-                    ctx.writeAddress16Immediate(imm.getValue());
-                } else if (ops[0] instanceof IdentifierOperand id) {
-                    ctx.writeAddress16Symbol(id.getName());
-                } else {
-                    throw new RuntimeException("Invalid CALL operand");
-                }
-            },
-            ops -> 3
-        ),
+                        if (!r.getName().equalsIgnoreCase("A")) {
+                            throw new RuntimeException("Only LD A, (nn) supported");
+                        }
 
-        new InstructionPattern(
-            "RET",
-            new OperandType[] {},
-            (ops, ctx) -> {
-                ctx.writeByte(0xC9);
-            },
-            ops -> 1
-        )
+                        MemoryOperand mem = (MemoryOperand) ops[1];
+                        Operand inner = mem.getAddress();
+
+                        ctx.writeByte(0x3A);
+
+                        if (inner instanceof ImmediateOperand imm) {
+                            ctx.writeAddress16Immediate(imm.getValue());
+                        } else if (inner instanceof IdentifierOperand id) {
+                            ctx.writeAddress16Symbol(id.getName());
+                        } else {
+                            throw new RuntimeException("Invalid memory address");
+                        }
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("JP",
+                    new OperandType[]{OperandType.ADDR},
+                    (ops, ctx) -> {
+                        ctx.writeByte(0xC3);
+
+                        if (ops[0] instanceof ImmediateOperand imm) {
+                            ctx.writeAddress16Immediate(imm.getValue());
+                        } else if (ops[0] instanceof IdentifierOperand id) {
+                            ctx.writeAddress16Symbol(id.getName());
+                        } else {
+                            throw new RuntimeException("Invalid JP operand");
+                        }
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("JR",
+                    new OperandType[]{OperandType.ADDR},
+                    (ops, ctx) -> {
+                        ctx.writeByte(0x18);
+
+                        if (ops[0] instanceof IdentifierOperand id) {
+                            ctx.writeRelative8Symbol(id.getName());
+                        } else if (ops[0] instanceof ImmediateOperand imm) {
+                            ctx.writeRelative8Immediate(imm.getValue());
+                        } else {
+                            throw new RuntimeException("Invalid JR operand");
+                        }
+                    },
+                    ops -> 2
+            ),
+
+            new InstructionPattern("AND",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0xA0 | r);
+                    },
+                    ops -> 1
+            ),
+
+            new InstructionPattern("XOR",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0xA8 | r);
+                    },
+                    ops -> 1
+            ),
+
+            new InstructionPattern("OR",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0xB0 | r);
+                    },
+                    ops -> 1
+            ),
+
+            new InstructionPattern("CP",
+                    new OperandType[]{OperandType.REG},
+                    (ops, ctx) -> {
+                        int r = regCode(((RegisterOperand) ops[0]).getName());
+                        ctx.writeByte(0xB8 | r);
+                    },
+                    ops -> 1
+            ),
+
+            new InstructionPattern("PUSH",
+                    new OperandType[]{OperandType.REG_PAIR},
+                    (ops, ctx) -> {
+                        String name = ((RegisterOperand) ops[0])
+                                .getName()
+                                .toUpperCase();
+
+                        switch (name) {
+                            case "BC", "DE", "HL", "AF" -> {
+                                int rp = rpCode(name);
+                                ctx.writeByte(0xC5 | (rp << 4));
+                            }
+                            case "IX" -> {
+                                ctx.writeByte(0xDD);
+                                ctx.writeByte(0xE5);
+                            }
+                            case "IY" -> {
+                                ctx.writeByte(0xFD);
+                                ctx.writeByte(0xE5);
+                            }
+                            default -> throw new RuntimeException(
+                                    "Invalid PUSH operand: " + name
+                            );
+                        }
+                    },
+                    ops -> 1
+            ),
+
+            new InstructionPattern("POP",
+                    new OperandType[]{OperandType.REG_PAIR},
+                    (ops, ctx) -> {
+                        String name = ((RegisterOperand) ops[0])
+                                .getName()
+                                .toUpperCase();
+
+                        switch (name) {
+                            case "BC", "DE", "HL", "AF" -> {
+                                int rp = rpCode(name);
+                                ctx.writeByte(0xC1 | (rp << 4));
+                            }
+                            case "IX" -> {
+                                ctx.writeByte(0xDD);
+                                ctx.writeByte(0xE1);
+                            }
+                            case "IY" -> {
+                                ctx.writeByte(0xFD);
+                                ctx.writeByte(0xE1);
+                            }
+                            default -> throw new RuntimeException(
+                                    "Invalid POP operand: " + name
+                            );
+                        }
+                    },
+                    ops -> 1
+            ),
+
+            new InstructionPattern("CALL",
+                    new OperandType[]{OperandType.ADDR},
+                    (ops, ctx) -> {
+                        ctx.writeByte(0xCD);
+
+                        if (ops[0] instanceof ImmediateOperand imm) {
+                            ctx.writeAddress16Immediate(imm.getValue());
+                        } else if (ops[0] instanceof IdentifierOperand id) {
+                            ctx.writeAddress16Symbol(id.getName());
+                        } else {
+                            throw new RuntimeException("Invalid CALL operand");
+                        }
+                    },
+                    ops -> 3
+            ),
+
+            new InstructionPattern("RET",
+                    new OperandType[]{},
+                    (ops, ctx) -> {
+                        ctx.writeByte(0xC9);
+                    },
+                    ops -> 1
+            )
     );
 
     public InstructionPattern find(Instruction inst) {
@@ -361,7 +337,7 @@ public class InstructionTable {
 
             for (int i = 0; i < p.types.length; i++) {
                 OperandType actual = classifier.classify(
-                    inst.getOperands().get(i)
+                        inst.getOperands().get(i)
                 );
                 if (actual != p.types[i]) {
                     match = false;

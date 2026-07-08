@@ -3,7 +3,6 @@ package org.psz80.linker;
 import java.util.Collections;
 import java.util.List;
 
-// resultado do ligador.
 public class LinkedProgram {
 
     private final byte[] bytes;
@@ -39,8 +38,8 @@ public class LinkedProgram {
         return result;
     }
 
-    // usado quando o ligador rodou em modo LINK_ONLY.
-    // O carregador relocador aplica o endereço de carga depois.
+    // fernanda: usado quando o ligador rodou em modo LINK_ONLY.
+    // fernanda: O carregador relocador aplica o endereço de carga depois.
     public byte[] relocateAt(int loadAddress) {
         byte[] relocated = bytes.clone();
 
