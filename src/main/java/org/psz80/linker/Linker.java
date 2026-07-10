@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Ligador de duas passagens.
 public class Linker {
 
     public LinkedProgram link(
@@ -52,9 +51,8 @@ public class Linker {
     }
 
     // Passagem 1:
-    // - calcula base relativa de cada módulo;
-    // - monta tabela global de símbolos;
-    // - detecta símbolos duplicados.
+    // calcula base relativa de cada módulo e monta tabela global de símbolos;
+    // detecta símbolos duplicados
     private int firstPass(
         List<ObjectModule> modules,
         Map<ObjectModule, Integer> moduleBases,
@@ -104,10 +102,9 @@ public class Linker {
     }
 
     // Passagem 2:
-    // - concatena os códigos;
-    // - resolve cada relocação;
-    // - no modo LINK_AND_RELOCATE, já soma o loadAddress;
-    // - no modo LINK_ONLY, deixa tabela para o carregador relocador.
+    // concatena os códigos e resolve cada relocação
+    // no modo LINK_AND_RELOCATE, já soma o loadAddress
+    // no modo LINK_ONLY, deixa tabela para o carregador relocador
     private LinkedProgram secondPass(
         List<ObjectModule> modules,
         LinkerMode mode,
@@ -161,7 +158,6 @@ public class Linker {
                                 targetRelativeAddress
                             );
 
-                            // Em LINK_ONLY, o carregador relocador somará o endereço de carga.
                             loaderRelocations.add(
                                 new RelocationEntry(
                                     globalOffset,
@@ -175,8 +171,6 @@ public class Linker {
                         int targetRelativeAddress =
                             targetSymbol.getLinkedAddress();
 
-                        // O offset do RelocationEntry aponta para o byte de deslocamento do JR.
-                        // O PC após ler esse byte será globalOffset + 1.
                         int sourceNextRelativeAddress = globalOffset + 1;
 
                         int displacement =
@@ -190,11 +184,7 @@ public class Linker {
                                     displacement
                             );
                         }
-
                         output[globalOffset] = (byte) (displacement & 0xFF);
-
-                        // PC_RELATIVE_8 não precisa ficar para o loader,
-                        // pois base de carga cancela nos dois lados.
                     }
                 }
             }

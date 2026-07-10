@@ -1,6 +1,5 @@
 package org.psz80.linker;
 
-// representa um ponto do código que precisa ser corrigido.
 public class RelocationEntry {
 
     private final int offset;
@@ -25,18 +24,4 @@ public class RelocationEntry {
         return type;
     }
 
-    @Override
-    public String toString() {
-        return (
-            "RelocationEntry{" +
-            "offset=" +
-            offset +
-            ", symbolName='" +
-            symbolName +
-            '\'' +
-            ", type=" +
-            type +
-            '}'
-        );
-    }
 }

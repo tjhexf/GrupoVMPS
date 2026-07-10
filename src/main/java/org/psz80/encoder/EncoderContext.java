@@ -8,7 +8,7 @@ import java.util.Map;
 import org.psz80.linker.RelocationEntry;
 import org.psz80.linker.RelocationType;
 
-// ALTERADO: agora o contexto também pode registrar relocações.
+// fer: agora o contexto também pode registrar relocações
 public class EncoderContext {
 
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -17,7 +17,7 @@ public class EncoderContext {
 
     private final boolean objectMode;
 
-    // lista de pontos que o ligador precisará corrigir
+    // fer: lista de pontos que o ligador precisará corrigir
     private final List<RelocationEntry> relocations = new ArrayList<>();
 
     private int pc = 0;
@@ -58,9 +58,6 @@ public class EncoderContext {
         return Collections.unmodifiableList(relocations);
     }
 
-    // escreve endereço absoluto de 16 bits a partir de símbolo
-    // Em modo absoluto: resolve agora
-    // Em modo objeto: deixa para o ligador
     public void writeAddress16Symbol(String symbolName) {
         if (objectMode) {
             relocations.add(
@@ -80,12 +77,11 @@ public class EncoderContext {
         writeWord(value);
     }
 
-    // imediato numérico não é símbolo, então não entra na tabela de relocação
+    // fer: imediato numérico não é símbolo, então não entra na tabela de relocação
     public void writeAddress16Immediate(int value) {
         writeWord(value);
     }
 
-    // JR label
     public void writeRelative8Symbol(String symbolName) {
         if (objectMode) {
             relocations.add(

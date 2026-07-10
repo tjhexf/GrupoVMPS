@@ -7,7 +7,7 @@ import org.psz80.assembler.model.Node;
 import org.psz80.encoder.Encoder;
 import org.psz80.linker.RelocationEntry;
 
-// agora tambem pode gerar relocações: quando objectMode=true
+// fer: aqui mudou pra gerar relocações
 public class Pass2 {
 
     private final Encoder encoder;

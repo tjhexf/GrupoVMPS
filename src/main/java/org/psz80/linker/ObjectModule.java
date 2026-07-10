@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-// saída relocável de um arquivo .asm -- "arquivo objeto" em memória.
+// fer: saída relocável de um arquivo .asm -- "arquivo objeto" em memória
 public class ObjectModule {
 
     private final String moduleName;

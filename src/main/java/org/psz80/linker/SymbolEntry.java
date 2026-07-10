@@ -1,6 +1,5 @@
 package org.psz80.linker;
 
-// entrada da tabela global de símbolos do ligador.
 public class SymbolEntry {
 
     private final String name;
@@ -36,21 +35,4 @@ public class SymbolEntry {
         return linkedAddress;
     }
 
-    @Override
-    public String toString() {
-        return (
-            "SymbolEntry{" +
-            "name='" +
-            name +
-            '\'' +
-            ", moduleName='" +
-            moduleName +
-            '\'' +
-            ", offset=" +
-            offset +
-            ", linkedAddress=" +
-            linkedAddress +
-            '}'
-        );
-    }
 }
