@@ -1,9 +1,10 @@
 package org.psz80.encoder;
 
+import java.util.List;
+import java.util.Map;
 import org.psz80.assembler.model.Instruction;
 import org.psz80.assembler.model.Operand;
-
-import java.util.Map;
+import org.psz80.linker.RelocationEntry;
 
 public class Encoder {
 
@@ -11,7 +12,12 @@ public class Encoder {
     private final InstructionTable table;
 
     public Encoder(Map<String, Integer> symbols) {
-        this.ctx = new EncoderContext(symbols);
+        this(symbols, false);
+    }
+
+    // objectMode=true, gera relocações
+    public Encoder(Map<String, Integer> symbols, boolean objectMode) {
+        this.ctx = new EncoderContext(symbols, objectMode);
         this.table = new InstructionTable();
     }
 
@@ -23,5 +29,9 @@ public class Encoder {
 
     public byte[] getBytes() {
         return ctx.getBytes();
+    }
+
+    public List<RelocationEntry> getRelocations() {
+        return ctx.getRelocations();
     }
 }
