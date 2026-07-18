@@ -20,15 +20,14 @@ public class MacroProcessor {
     private final List<String> formalParameters = new ArrayList<>();
     private final List<String> ala = new ArrayList<>();
 
-
     private boolean expansionMode = false;
     private int mdtIndex = 0;
 
-    
     private final List<Integer> mdtIndexStack = new ArrayList<>(); //pilha para chamadas aninhadas
-    private final List<List<String>> alaStack = new ArrayList<>(); 
+    private final List<List<String>> alaStack = new ArrayList<>();
 
-    public MacroProcessor(String input) { //construtor
+    public MacroProcessor(String input) {
+        //construtor
         this.input = input;
     }
 
@@ -41,8 +40,8 @@ public class MacroProcessor {
         return input.charAt(pos++);
     }
 
-    
-    public String process() { //ver tokenize do lexer
+    public String process() {
+        //ver tokenize do lexer
         StringBuilder output = new StringBuilder();
 
         while (!isAtEnd() || expansionMode) {
@@ -56,32 +55,26 @@ public class MacroProcessor {
         return output.toString();
     }
 
-
     private String readNextLine() {
         if (expansionMode) {
-
             if (mdtIndex < mdt.size()) {
                 String mdtLine = mdt.get(mdtIndex++);
-                
-                if (mdtLine.trim().equals("MCEND")) {
 
+                if (mdtLine.trim().equals("MCEND")) {
                     if (!mdtIndexStack.isEmpty()) {
                         int topo = mdtIndexStack.size() - 1;
                         mdtIndex = mdtIndexStack.remove(topo);
                         ala.clear();
                         ala.addAll(alaStack.remove(topo));
 
-                        return readNextLine(); 
-
+                        return readNextLine();
                     } else {
                         expansionMode = false;
 
                         return readNextLine();
                     }
-
                 }
                 return substituteAlaParameters(mdtLine);
-
             } else {
                 expansionMode = false;
             }
@@ -101,10 +94,7 @@ public class MacroProcessor {
         return lineBuilder.toString();
     }
 
-
-
-    private void processLine(String line, StringBuilder output){
-
+    private void processLine(String line, StringBuilder output) {
         String trimmed = line.trim();
         if (trimmed.isEmpty()) {
             if (!definitionMode) {
@@ -117,19 +107,16 @@ public class MacroProcessor {
         String opcode = parts[0];
 
         if (definitionMode) {
-
             if (opcode.equals("MCDEFN")) {
-                definitionLevel++; 
-
+                definitionLevel++;
             } else if (opcode.equals("MCEND")) {
-                definitionLevel--; 
+                definitionLevel--;
 
                 if (definitionLevel == 0) {
-                    definitionMode = false; 
+                    definitionMode = false;
                     mdt.add("MCEND");
                     return;
                 }
-
             }
 
             String preparedLine = prepareMdtLine(line);
@@ -137,8 +124,8 @@ public class MacroProcessor {
             return;
         }
 
-      
-        if (opcode.equals("MCDEFN")) {   //modo normal
+        if (opcode.equals("MCDEFN")) {
+            //modo normal
             definitionMode = true;
             definitionLevel = 1;
             formalParameters.clear();
@@ -164,7 +151,6 @@ public class MacroProcessor {
         Macro foundMacro = findMacro(opcode); //checa se é outra macro
         if (foundMacro != null) {
             if (expansionMode) {
-               
                 mdtIndexStack.add(mdtIndex);
                 alaStack.add(new ArrayList<>(ala));
             }
@@ -184,7 +170,6 @@ public class MacroProcessor {
         output.append(line);
     }
 
-
     private Macro findMacro(String name) {
         for (int i = mnt.size() - 1; i >= 0; i--) {
             if (mnt.get(i).getName().equals(name)) {
@@ -194,24 +179,28 @@ public class MacroProcessor {
         return null;
     }
 
-
     private String prepareMdtLine(String line) {
         String result = line;
 
         for (int i = 0; i < formalParameters.size(); i++) {
-            result = result.replace(formalParameters.get(i), "#(" + definitionLevel + "," + i + ")");
+            result = result.replace(
+                formalParameters.get(i),
+                "#(" + definitionLevel + "," + i + ")"
+            );
         }
 
         return result;
     }
 
-    
     private String substituteAlaParameters(String line) {
         String result = line;
 
         for (int i = 0; i < ala.size(); i++) {
-            result = result.replace("#(" + definitionLevel + "," + i + ")", ala.get(i));
-            result = result.replace("#(1," + i + ")", ala.get(i)); 
+            result = result.replace(
+                "#(" + definitionLevel + "," + i + ")",
+                ala.get(i)
+            );
+            result = result.replace("#(1," + i + ")", ala.get(i));
         }
 
         return result;
