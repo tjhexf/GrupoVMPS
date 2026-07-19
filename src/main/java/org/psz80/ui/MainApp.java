@@ -11,7 +11,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        stage.setTitle("GrupoVMPS - UI Mock");
+        stage.setTitle("GrupoVMPS");
 
         // jolene: instanciar o assembler e Sistema
         Assembler assembler = new Assembler();

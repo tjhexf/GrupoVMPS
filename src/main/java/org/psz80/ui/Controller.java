@@ -26,6 +26,7 @@ import org.psz80.assembler.model.Operand;
 import org.psz80.emulator.system.Z80System;
 import org.psz80.encoder.InstructionTable;
 import org.psz80.emulator.cpu.Registers;
+import org.psz80.ui.dialogs.LinkerDialog;
 
 public class Controller {
 
@@ -48,6 +49,8 @@ public class Controller {
     private final Button btnOpen = new Button("Abrir arquivo");
     private final Button btnSave = new Button("Salvar arquivo");
     private final Button btnAssemble = new Button("Montar");
+    private final Button btnLinkModules = new Button("Linkar módulos");
+    private final Button btnReset = new Button("Reset");
     private final Button btnRun = new Button("Executar");
     private final Button btnStop = new Button("Parar");
     private final ToggleButton btnStepMode = new ToggleButton("Executar - step");
@@ -81,7 +84,7 @@ public class Controller {
     private void buildUI() {
         disableExecutionButtons();
 
-        ToolBar tb = new ToolBar(btnNew, btnOpen, btnSave, btnAssemble, btnRun, btnStop, btnStepMode, btnNextStep);
+        ToolBar tb = new ToolBar(btnNew, btnOpen, btnSave, btnAssemble, btnLinkModules, btnReset, btnRun, btnStop, btnStepMode, btnNextStep);
         root.setTop(tb);
 
         SplitPane mainSplit = new SplitPane();
@@ -166,6 +169,8 @@ public class Controller {
         btnOpen.setOnAction(e -> handleOpenFile());
         btnSave.setOnAction(e -> handleSaveFile());
         btnAssemble.setOnAction(e -> handleAssemble());
+        btnLinkModules.setOnAction(e -> handleLinkModules());
+        btnReset.setOnAction(e -> handleReset());
         btnRun.setOnAction(e -> {
             isRunning = true;
             isStepMode = false;
@@ -246,40 +251,94 @@ public class Controller {
             }
             system.reset();
             system.loadProgram(0x0000, programa);
-            memoryComponent.refresh();
-            registersComponent.refresh(system.getRegisters());
-            memoryComponent.setHighlightedPc(system.getRegisters().getPC());
             consoleComponent.appendText("Montagem OK (" + programa.length + " bytes)\n");
-            enableExecutionButtons();
-            parseInstructions(et);
-            highlightCurrentInstruction(system.getRegisters().getPC());
+            loadProgramAndUpdateUI(0x0000);
         } catch (Exception ex) {
             consoleComponent.appendText("Erro na montagem: " + ex.getMessage() + "\n");
             disableExecutionButtons();
         }
     }
 
+    private void handleLinkModules() {
+        LinkerDialog dialog = new LinkerDialog(assembler, (program, contents) -> {
+            int[] bytes = program.toIntArray();
+            system.reset();
+            // No modo LINK_ONLY, o programa é relativo a 0; carregamos em 0x0000
+            // No modo LINK_AND_RELOCATE, o endereço já está aplicado nos bytes
+            int loadAddress = 0x0000;
+            system.loadProgram(loadAddress, bytes);
+            loadProgramAndUpdateUI(loadAddress, contents);
+            consoleComponent.appendText("Linkagem e carga OK (" + bytes.length + " bytes)\n");
+        }, files -> {
+            for (File file : files) {
+                editorComponent.loadFile(file);
+            }
+        });
+        dialog.showDialog(root.getScene().getWindow());
+    }
+
+    private void handleReset() {
+        if (isRunning) {
+            stopSimulation();
+        }
+        system.reset();
+        memoryComponent.refresh();
+        registersComponent.refresh(system.getRegisters());
+        memoryComponent.setHighlightedPc(system.getRegisters().getPC());
+        memoryComponent.setNextPc(-1);
+        highlightCurrentInstruction(system.getRegisters().getPC());
+        consoleComponent.appendText("Sistema resetado\n");
+    }
+
+    private void loadProgramAndUpdateUI(int loadAddress) {
+        EditorComponent.EditorTab et = editorComponent.getActiveEditorTab();
+        memoryComponent.refresh();
+        registersComponent.refresh(system.getRegisters());
+        memoryComponent.setHighlightedPc(system.getRegisters().getPC());
+        enableExecutionButtons();
+        if (et != null) {
+            parseInstructions(et);
+        }
+        highlightCurrentInstruction(system.getRegisters().getPC());
+    }
+
+    private void loadProgramAndUpdateUI(int loadAddress, List<String> moduleContents) {
+        memoryComponent.refresh();
+        registersComponent.refresh(system.getRegisters());
+        memoryComponent.setHighlightedPc(system.getRegisters().getPC());
+        enableExecutionButtons();
+        parseInstructions(moduleContents);
+        highlightCurrentInstruction(system.getRegisters().getPC());
+    }
+
     private void parseInstructions(EditorComponent.EditorTab et) {
+        if (et == null) return;
+        parseInstructions(List.of(et.area.getText()));
+    }
+
+    private void parseInstructions(List<String> sources) {
         instructionListComponent.clearInstructions();
         instrPcs.clear();
         try {
-            List<Node> nodes = assembler.parse(et.area.getText());
             InstructionTable table = new InstructionTable();
             int pc = 0;
             int idx = 0;
-            for (Node node : nodes) {
-                if (node instanceof Instruction inst) {
-                    instrPcs.add(pc);
-                    String text = inst.getMnemonic();
-                    if (!inst.getOperands().isEmpty()) {
-                        text += " " + inst.getOperands().stream()
-                            .map(Object::toString)
-                            .collect(Collectors.joining(", "));
+            for (String source : sources) {
+                List<Node> nodes = assembler.parse(source);
+                for (Node node : nodes) {
+                    if (node instanceof Instruction inst) {
+                        instrPcs.add(pc);
+                        String text = inst.getMnemonic();
+                        if (!inst.getOperands().isEmpty()) {
+                            text += " " + inst.getOperands().stream()
+                                .map(Object::toString)
+                                .collect(Collectors.joining(", "));
+                        }
+                        instructionListComponent.addInstruction(idx, text);
+                        Operand[] ops = inst.getOperands().toArray(new Operand[0]);
+                        pc += table.find(inst).size(ops);
+                        idx++;
                     }
-                    instructionListComponent.addInstruction(idx, text);
-                    Operand[] ops = inst.getOperands().toArray(new Operand[0]);
-                    pc += table.find(inst).size(ops);
-                    idx++;
                 }
             }
         } catch (Exception ex) {
