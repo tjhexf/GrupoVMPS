@@ -19,6 +19,7 @@ public class Z80System {
     }
 
     public void reset() {
+        memory.clear();
         registers.setPC(0x0000);
         registers.setSP(0xFFFE);
         registers.setIX(0x0000);

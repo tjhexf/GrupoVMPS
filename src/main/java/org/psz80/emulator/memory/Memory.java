@@ -18,5 +18,11 @@ public class Memory {
         this.memoria[address & 0xFFFF] = value & 0xFF;
     }
 
+    public void clear() {
+        for (int i = 0; i < memoria.length; i++) {
+            memoria[i] = 0;
+        }
+    }
+
 
 }
