@@ -133,7 +133,7 @@ public class MemoryComponent {
     }
 
     public void setNextPc(int pc) {
-        this.nextPc.set(pc & 0xFFFF);
+        this.nextPc.set(pc < 0 ? -1 : (pc & 0xFFFF));
         refresh();
     }
 
